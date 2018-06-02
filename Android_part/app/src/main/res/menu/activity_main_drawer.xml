@@ -13,9 +13,18 @@
             android:icon="@drawable/ic_heart"
             android:title="Heart Rate" />
         <item
+            android:id="@+id/nav_graph"
+            android:icon="@drawable/graph"
+            android:title="Heart Rate Graph" />
+        <item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_fall"
             android:title="Fall Detection" />
+
+        <item
+            android:id="@+id/caretaker"
+            android:icon="@drawable/caretaker"
+            android:title="Caretaker" />
     </group>
 
 </menu>

@@ -29,7 +29,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  */
 public class First extends Fragment {
     private TextView mTextView;
-    private String value = "hello world";
+    private String value = "27";
     View button;
     private static final String CHANNEL_ID = "zhenkit.masaproject";
     private static final int NOTIFICATION_ID = 003;
@@ -55,8 +55,12 @@ public class First extends Fragment {
         mDatabaseGig.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                   value = (String ) dataSnapshot.getValue();
+                   String value = (String ) dataSnapshot.getValue();
+                   Double i = Double.parseDouble(value);
                     mTextView.setText(value);
+                if (i > 38){
+                    sendNotification();
+                }
             }
 
             @Override
@@ -71,8 +75,8 @@ public class First extends Fragment {
 
             @Override
             public void onClick(View v){
-                Toast.makeText(getActivity(), "it works", Toast.LENGTH_SHORT).show();
-                sendNotification(v);
+                Toast.makeText(getActivity(), "Extreme Temperature detected", Toast.LENGTH_SHORT).show();
+                sendNotification();
             }
         });
         return v;
@@ -81,7 +85,7 @@ public class First extends Fragment {
 
 
     }
-    public void sendNotification(View v) {
+    public void sendNotification() {
         createNotificationChannel();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext(), CHANNEL_ID);
         builder.setSmallIcon(R.mipmap.ic_launcher_round);

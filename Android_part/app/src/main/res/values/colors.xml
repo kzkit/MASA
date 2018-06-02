@@ -6,4 +6,7 @@
     <color name="colorBg">#039BE5</color>
     <color name="whatever_text_color_you_wan">#32cd32</color>
     <color name="whatever_background_color_you_want">#ffffff</color>
+    <color name="fall_bg">#c9cacc</color>
+    <color name="hr_bg">#ce443a</color>
+
 </resources>

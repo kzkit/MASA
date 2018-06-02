@@ -3,6 +3,7 @@ package zhenkit.masaproject;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,7 +23,6 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class main extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,7 +36,9 @@ public class main extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Leaving MASA Project 0.1 ...", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                logOut();
+                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                intent.setData(Uri.parse("tel:+60183123123"));
+                                startActivity(intent);
             }
         });
 
@@ -76,10 +78,9 @@ public class main extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Toast.makeText(this, "hello", Toast.LENGTH_SHORT).show();
+            logOut();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -90,20 +91,32 @@ public class main extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            setTitle("Temperature Fragment");
+            setTitle("Temperature");
             First first = new First();
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.fragment, first).commit();
         } else if (id == R.id.nav_gallery) {
-            setTitle("Heart Rate Fragment");
+            setTitle("Heart Rate");
             Second second = new Second();
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.fragment, second).commit();
-        } else if (id == R.id.nav_slideshow) {
+        }
+        else if (id == R.id.nav_graph) {
+            setTitle("Heart Rate Graph");
+            Fifth fifth= new Fifth();
+            android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.fragment, fifth).commit();
+        }
+        else if (id == R.id.nav_slideshow) {
             setTitle("Fall Detection");
             Third third = new Third();
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.fragment, third).commit();
+        }else if (id == R.id.caretaker) {
+            setTitle("Caretaker's Info");
+            Fourth fourth = new Fourth();
+            android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.fragment, fourth).commit();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

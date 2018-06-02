@@ -75,7 +75,7 @@ public class Third extends Fragment {
 
             @Override
             public void onClick(View v){
-                Toast.makeText(getActivity(), "it works", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Fall Detected", Toast.LENGTH_SHORT).show();
                 sendNotification();
             }
         });

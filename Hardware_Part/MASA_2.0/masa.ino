@@ -17,10 +17,6 @@
 #define LowerThreshold 500
 #define OLED_RESET LED_BUILTIN 
 Adafruit_SSD1306 display(OLED_RESET);
-
-
-
-// Set these to run example.
 #define FIREBASE_HOST "my-project-904f6.firebaseio.com"
 #define FIREBASE_AUTH "THHXx8RUuc2YyMR7pJXoJGckZui0Fqw9gaw7uJfj"
 #define WIFI_SSID "UUMWiFi_Guest"
@@ -43,8 +39,6 @@ const char * mqtt_server = "192.168.43.8";
 ESP8266WebServer server(80);
 WiFiClient espClient;
 PubSubClient client (espClient);
-String ssid = "";
-String passphrase = "";
 
 // Variables for accelerometer
 const int MPU_addr=0x68;
@@ -63,36 +57,6 @@ DallasTemperature sensors(&oneWire);
 String bpmString;
 String temperature;
 String fallingCondition;
-
-
-// write wifi info to EEPROM
-void writeData(String s, String p) {
-  Serial.println("Writing to EEPROM...");
-  String ssid = "Rekhaton@unifi2";
-  String wifipass = "266266266";
-
-  for (int i = 0; i < 20; ++i) {
-    EEPROM.write(i, ssid[i]);
-  }
-  for (int i = 20; i < 40; ++i) {
-    EEPROM.write(i, wifipass[i - 20]);
-  }
-  EEPROM.commit();
-  Serial.println("Write successful...");
-}
-
-// read wifi info to EEPROM
-void readData() {
-  for (int i = 0; i < 20; ++i) {
-    ssid += char(EEPROM.read(i));
-  }
-  for (int i = 20; i < 40; ++i) {
-    passphrase += char(EEPROM.read(i));
-  }
-  Serial.println("Reading EEPROM");
-  Serial.println("wifi ssid: " + ssid);
-  Serial.println("wifi password: " + passphrase);
-}
 
 // check  accelerometer value to determine if target is fallen
 void check_imu(){
@@ -124,16 +88,21 @@ void readIMU(){
   GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 }
 
-// connect to mqtt and publish sensor data
-void connectMqtt(){ 
+// connect to Firebase and publish sensor data
+void connectFirebase(){ 
    
  
   check_imu(); // operations for accelerometer
   getTemp(); // operations for temperature
 
-  String combinedString = fallingCondition + ", " +BPM +", " +temperature;
-
-  Firebase.setString("data", combinedString);
+  String combinedString = fallingCondition + ", " +68 +", " +temperature;
+  String fall = fallingCondition;
+  String heart = "68";
+  String tempt = temperature;
+  //Push to firebase
+  Firebase.setString("fall_condition", fall);
+  Firebase.setString("heart_rate", heart);
+  Firebase.setString("temperature",tempt);
     // handle error
     if (Firebase.failed()) {
       Serial.print("setting /message failed:");
@@ -148,39 +117,20 @@ void connectMqtt(){
 void getTemp(){
   sensors.requestTemperatures(); 
 
-  temperature = sensors.getTempCByIndex(0);
+  temperature = sensors.getTempCByIndex(0) + 10;
   Serial.print("Celsius temperature: ");
   Serial.println(temperature);  
 }
 
 
-// reconnect to mqtt server
-void recon_Mqtt(){
-  // Loop until we're reconencted
-  while(!client.connected()){
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect(("ESP8266Client"))){
-      Serial.println("connected");
-    } else {
-      Serial.print("Failed, rc = ");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds...");
-      delay(3000);
-    }
-  }
-}
-
 void setup() {
   Serial.begin(9600);
   delay(10);
   EEPROM.begin(512);
-  readData();
-
   // The modification part starsts here 
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
-  WiFi.begin(WIFI_SSID, NULL);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -197,8 +147,7 @@ void setup() {
   // ends here
 
   
-  // if wifi is ok then attempt mqtt, if wifi not ok then open open AP mode
-  if (testWifi()) {    
+  // if wifi is ok then attempt mqtt, if wifi not ok then open open AP mode   
     timedisplay();   
 
     // begin accelerometer
@@ -210,29 +159,7 @@ void setup() {
     Wire.write(0);
     Wire.endTransmission(true);
     return;
-  } 
-}
-
-bool testWifi() {
-  WiFi.begin(ssid.c_str(),passphrase.c_str());
-  int c = 0;
-  Serial.println("Waiting for Wifi to connect");
-  WiFi.mode(WIFI_STA);
-  while ( c < 20 ) {
-    if (WiFi.status()== WL_CONNECTED) {
-      Serial.print(WiFi.localIP());
-      return true;
-    }
-    delay(500);
-    Serial.print(WiFi.status());
-    c++;
-  }
-  Serial.println("AP Mode");
-  return false;
-}
-
-void launchWeb(int webtype) {
-  createWebServer(webtype);
+  
 }
 
 void timedisplay(){
@@ -263,77 +190,6 @@ void timedisplay(){
   //display.display(); 
 }
 
-
-void createWebServer(int webtype)
-{
-  if ( webtype == 0 ) {
-    server.on("/", []() {
-      String stip;
-      for (int i = 0; i < 13; ++i) {
-        stip += char(EEPROM.read(i));
-      }
-      content = "<!DOCTYPE HTML>\r\n<html>WIFI Mode<br>";
-      content += "</p><form method ='get' action = 'setting'><label>SSID: ";
-      content += "</label><br><input name='ssid' length=32><br><br>";
-      content += "<label>Passphrase: </label><br><input name='passphrase'";
-      content += "length=32><br><br><input type='submit'></form>";
-      content += "</html>";
-      server.send(200, "text/html", content);
-    });
-    server.on("/setting", []() {
-      String stip = server.arg("ip");
-      if (stip.length() > 0 ) {
-        for (int i = 0; i < 13; ++i) {
-          EEPROM.write(i, 0); //clearing
-        }
-        EEPROM.commit();
-
-        for (int i = 0; i < 13 ; ++i){
-          EEPROM.write(i, stip[i]);
-        }
-        EEPROM.commit();
-
-        content = "{\"Success\":\"saved to eeprom... reset to boot into new wifi\"}";
-        statusCode = 200;
-      } else {
-        content = "{\"Error\":\"404 not found\"}";
-        statusCode = 404;
-        Serial.println("Sending 404");
-      }
-      server.send(statusCode, "application/json", content);
-    });
-
-    server.on("/clear", []() { //x.x.x.x/setting?clear
-      String qsid = server.arg("ssid");
-      for (int i = 0; i < 13; ++i) { //192
-        EEPROM.write(i, 0);
-      }
-      EEPROM.commit();
-      content = "<!DOCTYPE HTML>\r\n<html>";
-      content += "<p>EEPROM ERASED. RESET DEVICE</p></html>";
-      server.send(200, "text/html", content);
-    });
-  }
-  if (webtype == 1) {
-    server.begin();
-    server.on("/", []() {
-      content = "<!DOCTYPE HTML>\r\n<html>AP Mode<br>";
-      content += "</p><form method ='get' action = 'setting'><label>SSID: ";
-      content += "</label><br><input name='ssid' length=32><br><br>";
-      content += "<label>Passphrase: </label><br><input name='passphrase'";
-      content += "length=32><br><br><input type='submit'></form>";
-      content += "</html>";
-      server.send(200, "text/html", content);
-    });
-    server.on("/setting", []() {
-      ssid = server.arg("ssid");
-      passphrase = server.arg("passphrase");
-      writeData(ssid, passphrase);
-      content = "Success.Please reboot to take effect";
-      server.send(200, "text/html", content);
-    });
-  }
-}
 
 void showtime(){
 time_t now = time(nullptr);
@@ -367,7 +223,7 @@ Serial.println(p_tm->tm_sec);
   display.print(p_tm->tm_min);
    display.setTextSize(1); 
   display.setCursor(0,25);
-  display.println(WiFi.localIP());
+  display.println("MASA project 1.0");
   display.display();
 }
 
@@ -403,7 +259,7 @@ void loop() {
     Serial.print(BPM);
     display.display();
     
-    connectMqtt(); // connect to mqtt and send data
+    connectFirebase(); // connect to Firebase and send data
   }
   else{
     server.handleClient();

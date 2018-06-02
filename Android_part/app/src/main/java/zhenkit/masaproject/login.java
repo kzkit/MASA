@@ -92,7 +92,7 @@ public class login extends AppCompatActivity implements View.OnClickListener {
         //if the email and password are not empty
         //displaying a progress dialog
 
-        progressDialog.setMessage("Login In...");
+        progressDialog.setMessage("Logging In...");
         progressDialog.show();
 
         //logging in the user

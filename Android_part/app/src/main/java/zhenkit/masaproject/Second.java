@@ -53,7 +53,12 @@ public class Second extends Fragment {
         mDatabaseGig.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mTV_heartRate.setText((String ) dataSnapshot.getValue());
+                mTV_heartRate.setText((String) dataSnapshot.getValue()+"BPM");
+                String value = (String) dataSnapshot.getValue();
+                int i = Integer.parseInt(value);
+                if (i > 180){
+                    sendNotification();
+                }
             }
 
             @Override
@@ -66,13 +71,13 @@ public class Second extends Fragment {
 
             @Override
             public void onClick(View v){
-                Toast.makeText(getActivity(), "it works", Toast.LENGTH_SHORT).show();
-                sendNotification(v);
+                Toast.makeText(getActivity(), "High heart rate", Toast.LENGTH_SHORT).show();
+                sendNotification();
             }
         });
         return v;
     }
-    public void sendNotification(View v) {
+    public void sendNotification() {
         createNotificationChannel();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext(), CHANNEL_ID);
         builder.setSmallIcon(R.mipmap.ic_launcher_round);
